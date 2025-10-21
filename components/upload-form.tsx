@@ -10,10 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-import { Upload, CheckCircle2, CalendarIcon, BookOpen, Target, Trophy, FileSpreadsheet } from "lucide-react"
-import { format } from "date-fns"
+import { Upload, CheckCircle2, BookOpen, Target, Trophy, FileSpreadsheet } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { parseExcelFile } from "@/lib/parse-excel"
 import { saveUpload } from "@/lib/storage"
@@ -40,27 +37,16 @@ export default function UploadForm() {
   const [subject, setSubject] = useState("")
   const [totalMarks, setTotalMarks] = useState("0")
   const [passingMarks, setPassingMarks] = useState("0")
-  const [examDate, setExamDate] = useState<Date>()
+  const [examDate, setExamDate] = useState("")
   const [file, setFile] = useState<File | null>(null)
   const [errors, setErrors] = useState<string[]>([])
   const [parsing, setParsing] = useState(false)
   const [done, setDone] = useState(false)
   const router = useRouter()
 
-  const isFormValid = examName.trim() !== "" && subject !== "" && examDate !== undefined && file !== null
+  const isFormValid = examName.trim() !== "" && subject !== "" && examDate.trim() !== "" && file !== null
 
   const canSubmit = isFormValid && !parsing && !done
-
-  console.log("[v0] Form validation state:", {
-    examName: examName.trim() !== "",
-    subject: subject !== "",
-    totalMarks: totalMarks !== "",
-    passingMarks: passingMarks !== "",
-    examDate: examDate !== undefined,
-    file: file !== null,
-    isFormValid,
-    canSubmit,
-  })
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -74,7 +60,7 @@ export default function UploadForm() {
       return
     }
 
-    if (!file || !examDate) return
+    if (!file || !examDate.trim()) return
 
     try {
       setParsing(true)
@@ -83,7 +69,7 @@ export default function UploadForm() {
         subject,
         totalMarks: total,
         passingMarks: passing,
-        examDate: examDate.toISOString(),
+        examDate: examDate,
         fileName: file.name,
       })
       saveUpload(payload)
@@ -105,9 +91,6 @@ export default function UploadForm() {
           </div>
           <h1 className="text-3xl font-bold text-foreground">Upload Class Performance</h1>
         </div>
-        <p className="text-muted-foreground text-lg">
-          Transform your exam data into actionable insights with our advanced analytics platform
-        </p>
       </div>
 
       <Card className="content-panel border-0 shadow-xl">
@@ -196,33 +179,19 @@ export default function UploadForm() {
 
               {/* Exam Date */}
               <div className="space-y-3">
-                <Label className="text-base font-semibold flex items-center gap-2">
-                  <CalendarIcon className="h-4 w-4 text-primary" />
+                <Label htmlFor="examDate" className="text-base font-semibold flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-primary" />
                   Exam Date
                 </Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full h-12 justify-start text-left font-normal text-base",
-                        !examDate && "text-muted-foreground",
-                      )}
-                    >
-                      <CalendarIcon className="mr-3 h-5 w-5" />
-                      {examDate ? format(examDate, "PPP") : <span>Select exam date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={examDate}
-                      onSelect={setExamDate}
-                      initialFocus
-                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                    />
-                  </PopoverContent>
-                </Popover>
+                <Input
+                  id="examDate"
+                  type="text"
+                  value={examDate}
+                  onChange={(e) => setExamDate(e.target.value)}
+                  placeholder="e.g., 15-01-2024 or January 15, 2024"
+                  className="h-12 text-base"
+                  required
+                />
               </div>
             </div>
 
@@ -311,7 +280,7 @@ export default function UploadForm() {
 
               {!isFormValid && (
                 <p className="text-sm text-muted-foreground text-center">
-                  Please fill exam name, subject, select exam date, and upload an Excel file to continue
+                  Please fill exam name, subject, enter exam date, and upload an Excel file to continue
                 </p>
               )}
 
