@@ -38,8 +38,8 @@ const SUBJECTS = [
 export default function UploadForm() {
   const [examName, setExamName] = useState("")
   const [subject, setSubject] = useState("")
-  const [totalMarks, setTotalMarks] = useState("")
-  const [passingMarks, setPassingMarks] = useState("")
+  const [totalMarks, setTotalMarks] = useState("0")
+  const [passingMarks, setPassingMarks] = useState("0")
   const [examDate, setExamDate] = useState<Date>()
   const [file, setFile] = useState<File | null>(null)
   const [errors, setErrors] = useState<string[]>([])
@@ -47,13 +47,7 @@ export default function UploadForm() {
   const [done, setDone] = useState(false)
   const router = useRouter()
 
-  const isFormValid =
-    examName.trim() !== "" &&
-    subject !== "" &&
-    totalMarks !== "" &&
-    passingMarks !== "" &&
-    examDate !== undefined &&
-    file !== null
+  const isFormValid = examName.trim() !== "" && subject !== "" && examDate !== undefined && file !== null
 
   const canSubmit = isFormValid && !parsing && !done
 
@@ -72,10 +66,10 @@ export default function UploadForm() {
     e.preventDefault()
     setErrors([])
 
-    const total = Number.parseInt(totalMarks)
-    const passing = Number.parseInt(passingMarks)
+    const total = Number.parseInt(totalMarks) || 0
+    const passing = Number.parseInt(passingMarks) || 0
 
-    if (passing > total) {
+    if (total > 0 && passing > 0 && passing > total) {
       setErrors(["Passing marks cannot be greater than total marks"])
       return
     }
@@ -169,35 +163,33 @@ export default function UploadForm() {
                 <div className="space-y-3">
                   <Label htmlFor="totalMarks" className="text-base font-semibold flex items-center gap-2">
                     <Target className="h-4 w-4 text-primary" />
-                    Total Marks
+                    Total Marks <span className="text-xs text-muted-foreground">(Optional)</span>
                   </Label>
                   <Input
                     id="totalMarks"
                     type="number"
                     value={totalMarks}
                     onChange={(e) => setTotalMarks(e.target.value)}
-                    placeholder="100"
-                    min="1"
+                    placeholder="0"
+                    min="0"
                     className="h-12 text-base"
-                    required
                   />
                 </div>
 
                 <div className="space-y-3">
                   <Label htmlFor="passingMarks" className="text-base font-semibold flex items-center gap-2">
                     <Trophy className="h-4 w-4 text-secondary" />
-                    Passing Marks
+                    Passing Marks <span className="text-xs text-muted-foreground">(Optional)</span>
                   </Label>
                   <Input
                     id="passingMarks"
                     type="number"
                     value={passingMarks}
                     onChange={(e) => setPassingMarks(e.target.value)}
-                    placeholder="35"
-                    min="1"
+                    placeholder="0"
+                    min="0"
                     max={totalMarks || undefined}
                     className="h-12 text-base"
-                    required
                   />
                 </div>
               </div>
@@ -222,7 +214,13 @@ export default function UploadForm() {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={examDate} onSelect={setExamDate} initialFocus />
+                    <Calendar
+                      mode="single"
+                      selected={examDate}
+                      onSelect={setExamDate}
+                      initialFocus
+                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                    />
                   </PopoverContent>
                 </Popover>
               </div>
@@ -313,7 +311,7 @@ export default function UploadForm() {
 
               {!isFormValid && (
                 <p className="text-sm text-muted-foreground text-center">
-                  Please fill all fields and upload an Excel file to continue
+                  Please fill exam name, subject, select exam date, and upload an Excel file to continue
                 </p>
               )}
 
